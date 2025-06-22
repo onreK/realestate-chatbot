@@ -1,18 +1,18 @@
 import React, { useState } from "react";
-import axios from "axios";
 
 const logToGoogleSheet = async (message, leadType = "General") => {
   try {
-    await axios.post(
-      "https://script.google.com/macros/s/AKfycbwYVkLukdExnF8dSQT_-0LvQ7Ygf7pWDwSCeEnqoxf4WjN2uB3cPatdwgA3oQslhEfW/exec",
+    await fetch(
+      "https://script.google.com/macros/s/AKfycbzVXJdsg3DTqxiAwBUNxf4v2qiphv8R0O9OCfZINBd3xHJYBXlsI1e4WFcAdst2r0Oi/exec",
       {
-        Message: message,
-        LeadType: leadType,
-      },
-      {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          Message: message,
+          LeadType: leadType,
+        }),
       }
     );
   } catch (error) {
@@ -29,6 +29,7 @@ export default function AmandaRealtorPage() {
 
   const sendMessage = async () => {
     if (!input.trim()) return;
+
     const newMessages = [...messages, { from: "user", text: input }];
     setMessages(newMessages);
     setInput("");
@@ -55,6 +56,7 @@ export default function AmandaRealtorPage() {
 
     const data = await response.json();
     const reply = data.choices[0]?.message?.content;
+
     setMessages([...newMessages, { from: "bot", text: reply }]);
   };
 
@@ -62,7 +64,9 @@ export default function AmandaRealtorPage() {
     <div className="min-h-screen bg-white text-gray-900 font-sans">
       <section className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white py-20 px-6 text-center">
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Amanda the Realtor</h1>
-        <p className="text-lg md:text-2xl mb-6">Helping Richmond & Chester families find their perfect home</p>
+        <p className="text-lg md:text-2xl mb-6">
+          Helping Richmond & Chester families find their perfect home
+        </p>
         <a
           href="#schedule"
           className="inline-block bg-white text-purple-700 font-semibold px-6 py-3 rounded-xl shadow hover:bg-gray-100"
@@ -96,8 +100,17 @@ export default function AmandaRealtorPage() {
           <div className="w-80 h-96 bg-white border rounded-lg shadow-lg p-4 mt-2">
             <div className="overflow-y-auto h-72 border-b pb-2 mb-2">
               {messages.map((msg, i) => (
-                <div key={i} className={`mb-2 ${msg.from === "user" ? "text-right" : "text-left"}`}>
-                  <span className={`inline-block px-3 py-2 rounded-lg ${msg.from === "user" ? "bg-purple-100" : "bg-gray-100"}`}>{msg.text}</span>
+                <div
+                  key={i}
+                  className={`mb-2 ${msg.from === "user" ? "text-right" : "text-left"}`}
+                >
+                  <span
+                    className={`inline-block px-3 py-2 rounded-lg ${
+                      msg.from === "user" ? "bg-purple-100" : "bg-gray-100"
+                    }`}
+                  >
+                    {msg.text}
+                  </span>
                 </div>
               ))}
             </div>
