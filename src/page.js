@@ -1,25 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const logToAirtable = async (message, leadType = "General") => {
+const logToGoogleSheet = async (message, leadType = "General") => {
   try {
     await axios.post(
-      `https://api.airtable.com/v0/${process.env.REACT_APP_AIRTABLE_BASE_ID}/Leads`,
+      "https://script.google.com/macros/s/AKfycbwYVkLukdExnF8dSQT_-0LvQ7Ygf7pWDwSCeEnqoxf4WjN2uB3cPatdwgA3oQslhEfW/exec",
       {
-        fields: {
-          Message: message,
-          "Lead Type": leadType,
-        },
+        Message: message,
+        LeadType: leadType,
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.REACT_APP_AIRTABLE_API_KEY}`,
           "Content-Type": "application/json",
         },
       }
     );
   } catch (error) {
-    console.error("Airtable logging failed:", error);
+    console.error("Google Sheet logging failed:", error);
   }
 };
 
@@ -36,7 +33,7 @@ export default function AmandaRealtorPage() {
     setMessages(newMessages);
     setInput("");
 
-    logToAirtable(input, "General");
+    logToGoogleSheet(input, "General");
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
