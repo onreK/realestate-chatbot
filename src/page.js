@@ -78,7 +78,7 @@ export default function AmandaRealtorPage() {
         <h2 className="text-3xl font-bold mb-6">Schedule a Meeting</h2>
         <div className="max-w-2xl mx-auto">
           <iframe
-            src="https://calendly.com/demo-amanda/consultation"
+            src="https://calendly.com/kernopay/home-buyer-consultation"
             width="100%"
             height="600"
             frameBorder="0"
