@@ -26,19 +26,27 @@ const logToSheets = async (message, leadType = "Buyer", sessionId) => {
   }
 };
 
-// Helper function to create/get session ID
+// Helper function to create/get session ID (FIXED VERSION)
 const getSessionId = () => {
-  let sessionId = sessionStorage.getItem('chatSessionId');
-  if (!sessionId) {
-    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    sessionStorage.setItem('chatSessionId', sessionId);
+  try {
+    let sessionId = sessionStorage.getItem('chatSessionId');
+    if (!sessionId) {
+      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      sessionStorage.setItem('chatSessionId', sessionId);
+    }
+    return sessionId;
+  } catch (error) {
+    // Fallback if sessionStorage is not available
+    console.log('SessionStorage not available, using temporary session ID');
+    return 'temp_session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
-  return sessionId;
 };
 
-// AI response function that calls your API route
+// AI response function that calls your API route (FIXED VERSION WITH DEBUGGING)
 const generateAIResponse = async (messages) => {
   try {
+    console.log('Calling /api/chat with messages:', messages);
+    
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
@@ -47,11 +55,16 @@ const generateAIResponse = async (messages) => {
       body: JSON.stringify({ messages }),
     });
     
+    console.log('API response status:', response.status);
+    console.log('API response ok:', response.ok);
+    
     if (!response.ok) {
-      throw new Error('API request failed');
+      console.error('API response not ok:', response.status, response.statusText);
+      throw new Error(`API request failed: ${response.status}`);
     }
     
     const data = await response.json();
+    console.log('API response data:', data);
     return data.message;
   } catch (error) {
     console.error('AI response failed:', error);
