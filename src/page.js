@@ -1,16 +1,9 @@
 import React, { useState } from "react";
-import axios from "axios";
 
-// ✅ Updated to Google Sheets webhook
-const logToSheets = async (message, leadType = "General") => {
+const logToSheets = async (message, leadType = "Buyer") => {
+  const url = `https://script.google.com/macros/s/AKfycbwV3MRxnmKzSdbykLAFUS89MUAIzbj-VgqFTCQ_yk7m-bbwDGJEUTBNKRS-j5PCmV8T/exec?message=${encodeURIComponent(message)}&leadType=${encodeURIComponent(leadType)}`;
   try {
-    await axios.post(
-      "https://script.google.com/macros/s/AKfycbwV3MRxnmKzSdbykLAFUS89MUAIzbj-VgqFTCQ_yk7m-bbwDGJEUTBNKRS-j5PCmV8T/exec",
-      {
-        Message: message,
-        LeadType: leadType,
-      }
-    );
+    await fetch(url); // Using GET to avoid CORS preflight
   } catch (error) {
     console.error("Google Sheet logging failed:", error);
   }
@@ -19,53 +12,46 @@ const logToSheets = async (message, leadType = "General") => {
 export default function AmandaRealtorPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { from: "bot", text: "Hi! I’m Amanda’s assistant. How can I help you today?" },
+    { from: "bot", text: "Hi! I’m Amanda’s assistant. How can I help you today?" }
   ]);
   const [input, setInput] = useState("");
 
   const sendMessage = async () => {
     if (!input.trim()) return;
-
     const newMessages = [...messages, { from: "user", text: input }];
     setMessages(newMessages);
     setInput("");
 
-    logToSheets(input, "General");
+    logToSheets(input, "Buyer");
 
-    try {
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [
-            { role: "system", content: "You are Amanda's helpful real estate assistant." },
-            ...newMessages.map((msg) => ({
-              role: msg.from === "user" ? "user" : "assistant",
-              content: msg.text,
-            })),
-          ],
-        }),
-      });
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are Amanda's helpful real estate assistant." },
+          ...newMessages.map((msg) => ({
+            role: msg.from === "user" ? "user" : "assistant",
+            content: msg.text,
+          })),
+        ],
+      }),
+    });
 
-      const data = await response.json();
-      const reply = data.choices[0]?.message?.content;
-      setMessages([...newMessages, { from: "bot", text: reply }]);
-    } catch (error) {
-      console.error("OpenAI request failed:", error);
-    }
+    const data = await response.json();
+    const reply = data.choices[0]?.message?.content;
+    setMessages([...newMessages, { from: "bot", text: reply }]);
   };
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
       <section className="bg-gradient-to-br from-purple-600 to-indigo-600 text-white py-20 px-6 text-center">
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Amanda the Realtor</h1>
-        <p className="text-lg md:text-2xl mb-6">
-          Helping Richmond & Chester families find their perfect home
-        </p>
+        <p className="text-lg md:text-2xl mb-6">Helping Richmond & Chester families find their perfect home</p>
         <a
           href="#schedule"
           className="inline-block bg-white text-purple-700 font-semibold px-6 py-3 rounded-xl shadow hover:bg-gray-100"
@@ -100,13 +86,7 @@ export default function AmandaRealtorPage() {
             <div className="overflow-y-auto h-72 border-b pb-2 mb-2">
               {messages.map((msg, i) => (
                 <div key={i} className={`mb-2 ${msg.from === "user" ? "text-right" : "text-left"}`}>
-                  <span
-                    className={`inline-block px-3 py-2 rounded-lg ${
-                      msg.from === "user" ? "bg-purple-100" : "bg-gray-100"
-                    }`}
-                  >
-                    {msg.text}
-                  </span>
+                  <span className={`inline-block px-3 py-2 rounded-lg ${msg.from === "user" ? "bg-purple-100" : "bg-gray-100"}`}>{msg.text}</span>
                 </div>
               ))}
             </div>
